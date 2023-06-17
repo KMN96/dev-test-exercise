@@ -1,54 +1,75 @@
-import { Card, Form, Alert, Button } from "react-bootstrap";
-import { useState} from "react";
-import { authenticateUser } from "../lib/authenticate";
-import { useRouter } from "next/router";
-import { useAtom } from "jotai";
-import { favouritesAtom, searchHistoryAtom } from "../store";
-import { getFavourites, getHistory } from "../lib/userData";
+import React, { useState } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import { TextField, Button } from '@material-ui/core';
 
-export default function Login(props) {
-  const [warning, setWarning] = useState("");
-  const [user, setUser] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
-  const [searchHistory, setSearchHistory] = useAtom(searchHistoryAtom);
-  const [favouritesList, setFavouritesList] = useAtom(favouritesAtom);
+const useStyles = makeStyles((theme) => ({
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginTop: theme.spacing(10),
+  },
+  input: {
+    marginBottom: theme.spacing(2),
+    width: '300px',
+  },
+  error: {
+    color: 'red',
+    marginBottom: theme.spacing(1),
+  },
+}));
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+const Login = () => {
+  const classes = useStyles();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
 
-    try {
-      await authenticateUser(user, password);
-      await updateAtoms();
-      router.push("/favourites");
-    } catch (err) {
-      setWarning(err.message);
+  const handleEmailChange = (event) => {
+    setEmail(event.target.value);
+    setEmailError('');
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!isValidEmail(email)) {
+      setEmailError('Invalid email address');
+    } else {
+      // Perform login logic here
+      console.log('Logging in...');
     }
-  }
+  };
 
-  async function updateAtoms() {
-    setFavouritesList(await getFavourites());
-    setSearchHistory(await getHistory());
-  }
+  const isValidEmail = (email) => {
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   return (
-    <>
-      <Card bg="light">
-        <Card.Body><h2>Login</h2>Enter your login information below!</Card.Body>
-      </Card>
-      <br />
-      <Form onSubmit={handleSubmit}>
-        <Form.Group>
-          <Form.Label>User:</Form.Label><Form.Control type="text" value={user} id="userName" name="userName" onChange={(e) => setUser(e.target.value)}/>
-        </Form.Group>
-        <br />
-        <Form.Group>
-          <Form.Label>Password:</Form.Label><Form.Control type="password" value={password} id="password" name="password" onChange={(e) => setPassword(e.target.value)}/>
-        </Form.Group>
-        {warning && (<><br /><Alert variant="danger">{warning}</Alert></>)}
-        <br />
-        <Button variant="primary" className="pull-right" type="submit">Login</Button>
-      </Form>
-    </>
+    <form className={classes.container} onSubmit={handleSubmit}>
+      <TextField
+        className={classes.input}
+        label="Email"
+        variant="outlined"
+        value={email}
+        onChange={handleEmailChange}
+        error={!!emailError}
+        helperText={emailError}
+      />
+      <TextField
+        className={classes.input}
+        label="Password"
+        variant="outlined"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+      />
+      <Button variant="contained" color="primary" type="submit">
+        Login
+      </Button>
+    </form>
   );
-}
+};
+
+export default Login;
